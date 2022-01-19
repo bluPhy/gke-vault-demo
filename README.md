@@ -6,26 +6,28 @@
 
 ## Table of Contents
 
-* [Introduction](#introduction)
-* [Architecture](#architecture)
-* [Prerequisites](#prerequisites)
-  * [Cloud Project](#cloud-project)
-  * [Install Cloud SDK](#install-cloud-sdk)
-  * [Install Kubectl](#install-kubectl)
-  * [Install Terraform](#install-terraform)
-  * [Install Vault CLI](#install-vault-cli)
-  * [Configure Authentication](#configure-authentication)
-* [Deployment](#deployment)
-  * [Create the clusters](#create-the-clusters)
-  * [Configure Static Key-Value Secrets in Vault](#configure-static-key-value-secrets-in-vault)
-  * [Configure Kubernetes Pod Authentication to Vault](#configure-kubernetes-pod-authentication-to-vault)
-  * [Manually Retrieve Secrets from a Pod](#manually-retrieve-secrets-from-a-pod)
-  * [Configure an Auto-Init Example Application](#configure-an-auto-init-example-application)
-  * [Configure Dynamic GCP Service Account Credentials](#configure-dynamic-gcp-service-account-credentials)
-* [Validation](#validation)
-* [Teardown](#teardown)
-* [Troubleshooting](#troubleshooting)
-* [Relevant Material](#relevant-material)
+- [Vault on GKE](#vault-on-gke)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Architecture](#architecture)
+  - [Prerequisites](#prerequisites)
+    - [Cloud Project](#cloud-project)
+    - [Install Cloud SDK](#install-cloud-sdk)
+    - [Install Kubectl](#install-kubectl)
+    - [Install Terraform](#install-terraform)
+    - [Install Vault CLI](#install-vault-cli)
+    - [Configure Authentication](#configure-authentication)
+  - [Deployment](#deployment)
+    - [Create the clusters](#create-the-clusters)
+    - [Configure Static Key-Value Secrets in Vault](#configure-static-key-value-secrets-in-vault)
+    - [Configure Kubernetes Pod Authentication to Vault](#configure-kubernetes-pod-authentication-to-vault)
+    - [Manually Retrieve Secrets from a Pod](#manually-retrieve-secrets-from-a-pod)
+    - [Configure an Auto-Init Example Application](#configure-an-auto-init-example-application)
+    - [Configure Dynamic GCP Service Account Credentials](#configure-dynamic-gcp-service-account-credentials)
+  - [Validation](#validation)
+  - [Teardown](#teardown)
+  - [Troubleshooting](#troubleshooting)
+  - [Relevant Material](#relevant-material)
 
 ## Introduction
 
@@ -33,7 +35,7 @@
 
 Many new users to Kubernetes leverage the built-in secrets object to store sensitive data used by their application pods.  However, storing secret data in YAML files checked into source control is not a recommended approach for several security reasons.  The secret data is statically defined, difficult to change, difficult to control access to, and difficult to keep off developer filesystems and CI/CD systems.  As a best practice, secrets should not kept alongside the application in the same YAML manifests.  They should be stored in a central secrets management system such as Vault and fetched at runtime only by the application or process that needs them.  Should those secrets ever become compromised, the process of revoking, auditing, and rotating the secrets is simple since they are centrally controlled and managed with Vault.
 
-Building and running a highly-available Vault cluster on a dedicated GKE cluster is outside the scope of this demo, so this codebase leverages [Seth Vargo's Vault-on-GKE][2] repository as a [Terraform][5] module. Seth's repository stands up a separate, highly-availabile GKE cluster running the Vault cluster components with Google Cloud Storage for a highly durable secrets storage backend.
+Building and running a highly-available Vault cluster on a dedicated GKE cluster is outside the scope of this demo, so this codebase leverages [Seth Vargo's Vault-on-GKE][2] repository as a [Terraform][5] module. Seth's repository stands up a separate, highly-available GKE cluster running the Vault cluster components with Google Cloud Storage for a highly durable secrets storage backend.
 
 This demo deploys two private Kubernetes Engine Clusters into separate GCP projects. One cluster is dedicated to running [Vault][1] and is built using [Seth Vargo's Vault-on-GKE][2] [Terraform][5] repository.  The second cluster holds the applications that will fetch and use secrets from the Vault cluster.  The walkthrough covers creating and storing secrets in Vault, using Kubernetes authentication from within a pod to login to Vault, and fetching short-lived Google Service Account credentials on-demand from Vault within a pod.  These examples demonstrate the most common usage patterns of Vault from pods within another Kubernetes cluster.
 
@@ -65,7 +67,7 @@ If you are not running on Google Cloud Shell, you will need to install the Googl
 
 ### Install Kubectl
 
-If you are not running on Google Cloud Shell, you will need to install kubectl. The kubectl CLI is used to interteract with both Kubernetes Engine and kubernetes in general.
+If you are not running on Google Cloud Shell, you will need to install kubectl. The kubectl CLI is used to interact with both Kubernetes Engine and kubernetes in general.
 [Installation instructions](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 for multiple platforms are available online.
 
@@ -280,7 +282,7 @@ kubectl exec -it $(kubectl get pod -l "app=kv-sidecar" -o jsonpath="{.items[0].m
 apikey: MYAPIKEYHERE
 ```
 
-To validate that the `sidecar` continously retrieves the updated secret contents into the pod, make a change to the secret's contents inside vault.  Notice the number "2" added to the end of the `apikey`.
+To validate that the `sidecar` continuously retrieves the updated secret contents into the pod, make a change to the secret's contents inside vault.  Notice the number "2" added to the end of the `apikey`.
 
 ```console
 vault kv put secret/myapp/config \
